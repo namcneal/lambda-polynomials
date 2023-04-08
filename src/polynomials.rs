@@ -50,7 +50,6 @@ impl<'a, T: Scalar, const D: usize> Monomial<'a,T,D>{
 pub (crate) struct Polynomial<'a, T: Scalar, const D: usize>(pub (crate) Vec<Monomial<'a,T,D>>);
 
 impl<'a, T: Scalar, const D: usize> Polynomial<'a,T,D>{
-
 	pub fn eval(&self, x:&Vector<T,D>) -> T{
 		let mut result = T::zero();
 		for monomial in self.0.iter(){
@@ -59,6 +58,14 @@ impl<'a, T: Scalar, const D: usize> Polynomial<'a,T,D>{
 		
 		return result
 	}
-}
 
+	pub fn directional_derivative(&'a self, dir: usize) -> Polynomial<'a,T,D>{
+		let mut differentiated_monomials = Vec::<Monomial<'a,T,D>>::new();
+		for monomial in self.0.iter(){
+			differentiated_monomials.push(monomial.directional_derivative(dir));
+		}
+
+		Polynomial::<'a,T,D>(differentiated_monomials)
+	}
+}
 
