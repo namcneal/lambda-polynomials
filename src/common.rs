@@ -1,9 +1,10 @@
 use std::ops::Neg;
 use std::fmt::Debug;
-use num_traits::Num;
+use num_traits::{Num,Signed, Float};
+use std::cmp::PartialOrd;
 
 pub (crate) trait Scalar: Sized + Copy + Clone + Debug + ToString +
-						  Num + Neg<Output=Self> +
+						  PartialOrd + Float + Signed +
 						  From<u8> + From<f32> + From<f64>{}
 
 

@@ -1,21 +1,19 @@
 mod common;
-mod copyable_fn;
 mod polynomials;
+mod quotients;
+mod vectors;
 mod ops;
 mod differentiable;
 mod random;
 mod printing;
 
+mod coframes;
+
+use common::*;
 use polynomials::*;
 use differentiable::*;
-use random::*;
+use coframes::*;
 
-use ndarray::arr1;
-
-#[derive(Debug, Clone)]
-struct Coframe<T>{
-    axis : ndarray::Array1<T>
-}
 
 fn main() {
     const dimension : usize = 3;
@@ -23,30 +21,30 @@ fn main() {
     let seed = 1;
     let mean = 0.0;
     let std = 1.0;
-    let max_power : u8 = 3;
-    let max_num_monomials = 5;
+    let max_power : u8 = 1;
+    let max_num_monomials = 2;
 
-    let mut axis_elements = Vec::<Polynomial<f64, dimension>>::new();
-    for i in 0..dimension{
-        let element_expansion = random_polynomial::<f64,dimension>(seed, mean, std, max_power, max_num_monomials);
-        axis_elements.push(element_expansion);
-    }
 
-    let coframe = Coframe{axis:arr1(&axis_elements)};
-    
-    // let x : [f64; D] = [5.0,2.0,4.0];
+    let coframe = Coframe::<f64,dimension>::new(seed,mean,std,max_power, max_num_monomials);
+    let x : [f64; D] = [0.5, 1.0, 1.5];
 
     // let arr  = ndarray::array![polynomial.clone(),polynomial.clone()];
 
     
 
-    // let result = &coframe.axis.jacobian(&x);
+    let R = coframe.matrix(&x);
 
 
     // let t = basis.coordinate(0);
     // let x = basis.coordinate(1);
 
-    println!("{:?}", coframe);
+    // let a = &coframe.axis[0];
+    // let b = &coframe.axis[2];
+    // println!("{:?}", a);
+    // // println!("{:?}", b);
+    // println!("{:?}", &(a-a) + &(b-b));
+
+    println!("{:?}", &coframe.matrix.jacobian(&x));
 
     return ();
 }

@@ -48,6 +48,8 @@ impl<'a,T: Scalar, const D: usize> fmt::Debug for Monomial<'a,T,D>{
 impl<'a,T: Scalar, const D: usize> fmt::Debug for Polynomial<'a,T,D>{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self.constant);
+        write!(f, " + ");
+
 
         for (i, monomial) in self.monomials().enumerate(){
             monomial.fmt(f);

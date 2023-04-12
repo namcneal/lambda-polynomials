@@ -1,40 +1,28 @@
 use crate::common::*;
 use crate::polynomials::*;
+use crate::quotients::*;
 
 use std::ops::*;
+use std::collections::HashMap;
+use num_traits::abs;
+use duplicate::duplicate_item;
+
 
 impl<'a,T: Scalar, const D: usize> Add for &Polynomial<'a,T,D>{
 	type Output = Polynomial<'a,T,D>;
+
 	fn add(self, rhs: Self) -> Self::Output {
 		let new_constant = self.constant + rhs.constant;
 		
-		let mut added_monomials = Vec::<Monomial<T,D>>::new();
-		for monomial in self.monomials(){
-			let mut new_coefficient = monomial.coefficient;
-			
-			let also_in_rhs = rhs.monomials().filter(|rhs_mono| rhs_mono.exponents == monomial.exponents);
-			for rhs_monomial in also_in_rhs{
-				new_coefficient = new_coefficient + rhs_monomial.coefficient;
-			}
+		let added_monomials = self.monomials()
+			.chain(rhs.monomials())
+			.map(|mono| mono.clone())
+			.collect();
 
-			added_monomials.push(Monomial::<T,D>::new(&monomial.exponents, new_coefficient));
-		}
+		let mut poly = Polynomial::<'a,T,D>{constant: new_constant, monomials:added_monomials};
+		poly.combine_like_monomials();
 
-		Polynomial::<'a,T,D>{constant: new_constant, monomials:added_monomials}
-	}
-}
-
-impl<'a,T: Scalar, const D: usize> Add<Polynomial<'a,T,D>> for &Polynomial<'a,T,D>{
-	type Output = Polynomial<'a,T,D>;
-	fn add(self, rhs: Polynomial<'a,T,D>) -> Self::Output {
-		self * &rhs
-	}
-}
-
-impl<'a,T: Scalar, const D: usize> Add for Polynomial<'a,T,D>{
-	type Output = Polynomial<'a,T,D>;
-	fn add(self, rhs: Polynomial<'a,T,D>) -> Self::Output {
-	 	&self * rhs
+		return poly;
 	}
 }
 
@@ -45,10 +33,10 @@ impl<'a,T: Scalar, const D: usize> Add<T> for &Polynomial<'a,T,D>{
 	}
 }
 
-impl<'a,T: Scalar, const D: usize> Add<T> for Polynomial<'a,T,D>{
-	type Output = Polynomial<'a,T,D>;
+impl<'a,T: Scalar, const D: usize> Add<T> for &mut Polynomial<'a,T,D>{
+	type Output = ();
 	fn add(self, rhs: T) -> Self::Output {
-		&self + rhs
+		self.constant = self.constant + rhs;
 	}
 }
 
@@ -65,19 +53,18 @@ impl<'a,T: Scalar, const D: usize> Neg for &Polynomial<'a,T,D>{
 	}
 }
 
-impl<'a,T: Scalar, const D: usize> Neg for Polynomial<'a,T,D>{
-	type Output = Polynomial<'a,T,D>;
+impl<'a,T: Scalar, const D: usize> Neg for &mut Polynomial<'a,T,D>{
+	type Output = ();
 
 	fn neg(self) -> Self::Output {
-		-&self
+		-self
 	}
 }
 
 impl<'a,T: Scalar, const D: usize> Sub for &Polynomial<'a,T,D>{
 	type Output = Polynomial<'a,T,D>;
 	fn sub(self, rhs: Self) -> Self::Output {
-		let neg_rhs = -rhs;
-		self + neg_rhs
+		self + &-rhs
 	}
 }
 
@@ -89,24 +76,29 @@ impl<'a,T: Scalar, const D: usize> Sub<T> for &Polynomial<'a,T,D>{
 	}
 }
 
-impl<'a,T: Scalar, const D: usize> Sub for Polynomial<'a,T,D>{
-	type Output = Polynomial<'a,T,D>;
-	fn sub(self, rhs: Self) -> Self::Output {
-		&self - &rhs
-	}
-}
 
 impl<'a,T: Scalar, const D: usize> Mul for &Polynomial<'a,T,D>{
 	type Output = Polynomial<'a,T,D>;
 	fn mul(self, rhs: Self) -> Self::Output {
 		let mut monomials = Vec::<Monomial<T,D>>::new();
-		for (a,b) in self.monomials().zip(rhs.monomials()){
-			monomials.push(b*self.constant);
+
+		for b in rhs.monomials(){
+			monomials.push(b*self.constant);	
+		}
+		for a in self.monomials(){
 			monomials.push(a*rhs.constant);
-			monomials.push(a*b);
+		}
+		for a in self.monomials(){
+			for b in rhs.monomials(){
+				monomials.push(a*b);
+
+			}
 		}
 
-		Polynomial::<T,D>{constant:self.constant*rhs.constant, monomials:monomials}
+	let mut poly = Polynomial::<T,D>{constant:self.constant*rhs.constant, monomials:monomials};
+	poly.combine_like_monomials();
+
+	return poly;
 	}
 }
 

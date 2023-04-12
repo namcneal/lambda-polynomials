@@ -1,5 +1,6 @@
 use crate::common::*;
-use crate::polynomials::{Monomial, Polynomial, Quotient};
+use crate::polynomials::{Monomial, Polynomial};
+use crate::quotients::{Quotient};
 use array_init::array_init;
 
 use duplicate::duplicate_item;
@@ -76,13 +77,16 @@ impl<'a,'b,T: Scalar, const D: usize> Differentiable<'b,T,D> for Quotient<'a,T,D
 		d_denominator.partially_differentiate(i);
 
 		let mut numerator = &self.denominator * d_numerator;
-		numerator = numerator - &self.numerator * d_denominator;
+		numerator = &numerator - &(&self.numerator * d_denominator);
 
-		let denominator = &self.denominator * &self.denominator;
+		let mut denominator = &self.denominator * &self.denominator;
 
+		numerator.combine_like_monomials();
+		denominator.combine_like_monomials();
 		Quotient::<T,D>{numerator: numerator, denominator:denominator}
 	}
 }
+
 
 #[duplicate_item(
     dim                      object;
@@ -126,4 +130,6 @@ impl<'a,'b,T:Scalar,const D:usize> Differentiable<'b,T,D> for ndarray::Array<obj
 		return differentiated
 	}
 }
+
+
 
